@@ -1,27 +1,28 @@
 ﻿using Contracts;
 using Entities.Models;
 using Entities.Validations;
+using System;
 
 namespace Factories
 {
     public static class CustomerFactory // Design Pattern : Simple Factory pattern
     {
-        private static readonly Lazy<Dictionary<string, ICustomer>> _customerLazyList;
+        private static readonly Lazy<Dictionary<string, Func<ICustomer>>> _customerLazyList;
 
-        public static Dictionary<string, ICustomer> Customers => _customerLazyList.Value;
+        private static Dictionary<string, Func<ICustomer>> Customers => _customerLazyList.Value;
 
         static CustomerFactory()
         {
             //lazy loading
-            _customerLazyList = new Lazy<Dictionary<string, ICustomer>>(() => GetCustomers());
+            _customerLazyList = new Lazy<Dictionary<string, Func<ICustomer>>>(() => GetCustomers());
         }
 
-        private static Dictionary<string, ICustomer> GetCustomers()
+        private static Dictionary<string, Func<ICustomer>> GetCustomers()
         {
-            Dictionary<string, ICustomer> tempCustomers = new()
+            Dictionary<string, Func<ICustomer>> tempCustomers = new()
             {
-                { "Customer", new Customer(new CustomerValidation()) }, //Design Pattern : Strategy, helps to choose algorithms dynamically
-                { "Lead", new Lead(new LeadValidation()) }
+                { "Customer", () => new Customer(new CustomerValidation()) }, //Design Pattern : Strategy, helps to choose algorithms dynamically
+                { "Lead", () => new Lead(new LeadValidation()) }
             };
 
             return tempCustomers;
@@ -40,7 +41,7 @@ namespace Factories
             //}
 
             //Design Pattern : Lazy loading, load only when objects are needed
-            return Customers[customerType];
+            return Customers[customerType].Invoke();
         }
     }
 }
